@@ -29,7 +29,7 @@ public class LL1Parser {
     private Token match(Tag tag) {
         if (lookahead.tag() == tag)
             return move();
-        error("syntax error");
+        error("Erro de sintaxe. Esperado '" + tag + "' mas encontrado '" + lookahead.tag() + "'");
         return null;
     }
 
@@ -45,10 +45,9 @@ public class LL1Parser {
     // EXPR -> TERM EXPR'
     private void expr() {
         term();
-
         // EXPR' -> + TERM EXPR' | - TERM EXPR' | ε
         while (lookahead.tag() == Tag.SUM || lookahead.tag() == Tag.SUB) {
-            lookahead = move();
+            move();
             term();
         }
     }
@@ -77,7 +76,7 @@ public class LL1Parser {
         unary();
         // TERM' -> * UNARY TERM' | / UNARY TERM' | ε
         while (lookahead.tag() == Tag.MUL || lookahead.tag() == Tag.DIV) {
-            lookahead = move();
+            move();
             unary();
         }
     }
@@ -111,28 +110,27 @@ public class LL1Parser {
 
     // PRIMARY -> < id | > id | POST
     private void primary() {
-        switch (lookahead.tag()) {
-            case GT:
-                match(Tag.GT);
-                match(Tag.ID);
-                break;
-            case LT:
-                match(Tag.LT);
-                match(Tag.ID);
-                break;
-            default:
-                post();
-                break;
+        if (lookahead.tag() == Tag.GT || lookahead.tag() == Tag.LT) {
+            move();
+            match(Tag.ID);
+        } else {
+            post();
         }
     }
 
     // POST -> FACTOR POST'
     private void post() {
         factor();
-        postPrime();
+        // POST' -> > | < | ε
+        if (lookahead.tag() == Tag.GT) {
+            match(Tag.GT);
+        } else if (lookahead.tag() == Tag.LT) {
+            match(Tag.LT);
+        }
     }
 
     // POST' -> > | < | ε
+    @Deprecated
     private void postPrime() {
         switch (lookahead.tag()) {
             case GT:
@@ -164,7 +162,7 @@ public class LL1Parser {
                 match(Tag.LIT_REAL);
                 break;
             default:
-                error("Esperado fator (id, número ou parênteses)");
+                error("Esperado fator (id, número ou parênteses)" + lookahead);
                 break;
         }
     }
