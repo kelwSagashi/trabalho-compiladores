@@ -45,13 +45,16 @@ public class LL1Parser {
     // EXPR -> TERM EXPR'
     private void expr() {
         term();
-        while(lookahead.tag() == Tag.SUM || lookahead.tag() == Tag.SUB){
+
+        // EXPR' -> + TERM EXPR' | - TERM EXPR' | ε
+        while (lookahead.tag() == Tag.SUM || lookahead.tag() == Tag.SUB) {
             lookahead = move();
             term();
         }
     }
 
     // EXPR' -> + TERM EXPR' | - TERM EXPR' | ε
+    @Deprecated
     private void exprPrime() {
         switch (lookahead.tag()) {
             case SUM:
@@ -72,10 +75,15 @@ public class LL1Parser {
     // TERM -> UNARY TERM'
     private void term() {
         unary();
-        termPrime();
+        // TERM' -> * UNARY TERM' | / UNARY TERM' | ε
+        while (lookahead.tag() == Tag.MUL || lookahead.tag() == Tag.DIV) {
+            lookahead = move();
+            unary();
+        }
     }
 
     // TERM' -> * UNARY TERM' | / UNARY TERM' | ε
+    @Deprecated
     private void termPrime() {
         switch (lookahead.tag()) {
             case MUL:
@@ -95,15 +103,10 @@ public class LL1Parser {
 
     // UNARY -> + UNARY | - UNARY | PRIMARY
     private void unary() {
-        if (lookahead.tag() == Tag.SUM) {
-            match(Tag.SUM);
-            unary();
-        } else if (lookahead.tag() == Tag.SUB) {
-            match(Tag.SUB);
-            unary();
-        } else {
-            primary();
+        while (lookahead.tag() == Tag.SUM || lookahead.tag() == Tag.SUB) {
+            move();
         }
+        primary();
     }
 
     // PRIMARY -> < id | > id | POST
